@@ -1,3 +1,14 @@
+# Liberu Automation
+Webhosting Control Panel and Billing System.
+
+### Other active projects
+* https://github.com/liberu-accounting/accounting-laravel
+* https://github.com/liberu-cms/cms-laravel
+* https://github.com/liberu-crm/crm-laravel
+* https://github.com/liberu-ecommerce/ecommerce-laravel
+* https://github.com/liberu-maintenance/maintenance-laravel
+* https://github.com/liberu-real-estate/real-estate-laravel
+
 ### Description
 Welcome to Liberu Automation, our revolutionary open-source project that redefines the world of web hosting control and billing. With the powerful combination of Laravel 11, PHP 8.3, Livewire 3, and Filament 3, Liberu Automation is not just a control panel – it's a dynamic solution designed to streamline web hosting management and billing processes with efficiency and innovation.
 
