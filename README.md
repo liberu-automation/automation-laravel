@@ -1,5 +1,5 @@
 # Liberu Automation
-Webhosting Control Panel and Billing System.
+Control Panel and Billing System.
 
 ### Other active projects
 * https://github.com/liberu-accounting/accounting-laravel
