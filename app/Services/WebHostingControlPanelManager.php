@@ -9,6 +9,7 @@ class WebHostingControlPanelManager
     private $controlPanel;
     private $virtualminClient;
     private $directAdminClient;
+    private $pleskClient;
 
     public function __construct(string $controlPanel)
     {
@@ -24,6 +25,12 @@ class WebHostingControlPanelManager
                 config('services.directadmin.base_url'),
                 config('services.directadmin.username'),
                 config('services.directadmin.password')
+            );
+        } elseif ($controlPanel === 'plesk') {
+            $this->pleskClient = new PleskApiClient(
+                config('services.plesk.base_url'),
+                config('services.plesk.username'),
+                config('services.plesk.password')
             );
         }
     }
@@ -115,5 +122,26 @@ class WebHostingControlPanelManager
         return $this->virtualminClient->deleteAccount($accountId);
     }
 
-    // Implement similar methods for cPanel, Plesk, and DirectAdmin
+    // Implement Plesk-specific methods
+    private function createPleskAccount(array $data): bool
+    {
+        return $this->pleskClient->createAccount($data);
+    }
+
+    private function suspendPleskAccount(string $accountId): bool
+    {
+        return $this->pleskClient->suspendAccount($accountId);
+    }
+
+    private function unsuspendPleskAccount(string $accountId): bool
+    {
+        return $this->pleskClient->unsuspendAccount($accountId);
+    }
+
+    private function deletePleskAccount(string $accountId): bool
+    {
+        return $this->pleskClient->deleteAccount($accountId);
+    }
+
+    // Implement similar methods for cPanel and DirectAdmin
 }
