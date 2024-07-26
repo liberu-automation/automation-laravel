@@ -7,10 +7,18 @@ use Exception;
 class WebHostingControlPanelManager
 {
     private $controlPanel;
+    private $virtualminClient;
 
     public function __construct(string $controlPanel)
     {
         $this->controlPanel = $controlPanel;
+        if ($controlPanel === 'virtualmin') {
+            $this->virtualminClient = new VirtualminApiClient(
+                config('services.virtualmin.base_url'),
+                config('services.virtualmin.username'),
+                config('services.virtualmin.password')
+            );
+        }
     }
 
     public function createAccount(array $data): bool
@@ -45,6 +53,22 @@ class WebHostingControlPanelManager
         }
     }
 
+    public function unsuspendAccount(string $accountId): bool
+    {
+        switch ($this->controlPanel) {
+            case 'virtualmin':
+                return $this->unsuspendVirtualminAccount($accountId);
+            case 'cpanel':
+                return $this->unsuspendCpanelAccount($accountId);
+            case 'plesk':
+                return $this->unsuspendPleskAccount($accountId);
+            case 'directadmin':
+                return $this->unsuspendDirectAdminAccount($accountId);
+            default:
+                throw new Exception("Unsupported control panel: {$this->controlPanel}");
+        }
+    }
+
     public function deleteAccount(string $accountId): bool
     {
         switch ($this->controlPanel) {
@@ -66,23 +90,22 @@ class WebHostingControlPanelManager
 
     private function createVirtualminAccount(array $data): bool
     {
-        // Implement Virtualmin account creation logic
-        // Use Virtualmin API or command-line tools
-        // Return true if successful, false otherwise
+        return $this->virtualminClient->createAccount($data);
     }
 
     private function suspendVirtualminAccount(string $accountId): bool
     {
-        // Implement Virtualmin account suspension logic
-        // Use Virtualmin API or command-line tools
-        // Return true if successful, false otherwise
+        return $this->virtualminClient->suspendAccount($accountId);
+    }
+
+    private function unsuspendVirtualminAccount(string $accountId): bool
+    {
+        return $this->virtualminClient->unsuspendAccount($accountId);
     }
 
     private function deleteVirtualminAccount(string $accountId): bool
     {
-        // Implement Virtualmin account deletion logic
-        // Use Virtualmin API or command-line tools
-        // Return true if successful, false otherwise
+        return $this->virtualminClient->deleteAccount($accountId);
     }
 
     // Implement similar methods for cPanel, Plesk, and DirectAdmin
