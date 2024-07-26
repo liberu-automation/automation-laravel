@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'cpanel' => [
+        'base_url' => env('CPANEL_BASE_URL'),
+        'username' => env('CPANEL_USERNAME'),
+        'api_token' => env('CPANEL_API_TOKEN'),
+    ],
+
 ];
