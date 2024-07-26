@@ -25,9 +25,9 @@ class PersonalAccessTokensPage extends Page
         $this->user = Auth::user();
     }
 
-    public function createApiToken(string $name): void
+    public function createApiToken(string $name, array $abilities = []): void
     {
-        $this->user->createToken($name);
+        $this->user->createToken($name, $abilities);
     }
 
     public function deleteApiToken(string $name): void
@@ -43,5 +43,14 @@ class PersonalAccessTokensPage extends Page
     public static function shouldRegisterNavigation(): bool
     {
         return true;
+    }
+
+    public static function getApiScopes(): array
+    {
+        return [
+            'control-panel:create' => 'Create hosting accounts',
+            'control-panel:suspend' => 'Suspend hosting accounts',
+            'control-panel:delete' => 'Delete hosting accounts',
+        ];
     }
 }
