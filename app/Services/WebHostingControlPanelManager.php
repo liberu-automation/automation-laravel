@@ -9,6 +9,7 @@ class WebHostingControlPanelManager
     private $controlPanel;
     private $virtualminClient;
     private $directAdminClient;
+    private $cpanelClient;
 
     public function __construct(string $controlPanel)
     {
@@ -24,6 +25,12 @@ class WebHostingControlPanelManager
                 config('services.directadmin.base_url'),
                 config('services.directadmin.username'),
                 config('services.directadmin.password')
+            );
+        } elseif ($controlPanel === 'cpanel') {
+            $this->cpanelClient = new CpanelApiClient(
+                config('services.cpanel.base_url'),
+                config('services.cpanel.username'),
+                config('services.cpanel.api_token')
             );
         }
     }
@@ -115,5 +122,26 @@ class WebHostingControlPanelManager
         return $this->virtualminClient->deleteAccount($accountId);
     }
 
-    // Implement similar methods for cPanel, Plesk, and DirectAdmin
+    // Implement methods for cPanel
+    private function createCpanelAccount(array $data): bool
+    {
+        return $this->cpanelClient->createAccount($data);
+    }
+
+    private function suspendCpanelAccount(string $accountId): bool
+    {
+        return $this->cpanelClient->suspendAccount($accountId);
+    }
+
+    private function unsuspendCpanelAccount(string $accountId): bool
+    {
+        return $this->cpanelClient->unsuspendAccount($accountId);
+    }
+
+    private function deleteCpanelAccount(string $accountId): bool
+    {
+        return $this->cpanelClient->deleteAccount($accountId);
+    }
+
+    // Implement similar methods for Plesk and DirectAdmin
 }
