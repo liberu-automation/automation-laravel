@@ -8,6 +8,7 @@ class WebHostingControlPanelManager
 {
     private $controlPanel;
     private $virtualminClient;
+    private $directAdminClient;
 
     public function __construct(string $controlPanel)
     {
@@ -17,6 +18,12 @@ class WebHostingControlPanelManager
                 config('services.virtualmin.base_url'),
                 config('services.virtualmin.username'),
                 config('services.virtualmin.password')
+            );
+        } elseif ($controlPanel === 'directadmin') {
+            $this->directAdminClient = new DirectAdminApiClient(
+                config('services.directadmin.base_url'),
+                config('services.directadmin.username'),
+                config('services.directadmin.password')
             );
         }
     }
