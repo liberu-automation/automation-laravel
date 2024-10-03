@@ -192,7 +192,6 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
-        'SiteConfig' => Intelrx\Sitesettings\SiteConfig::class,
     ])->toArray(),
 
 ];
