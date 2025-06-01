@@ -176,7 +176,7 @@ return [
         App\Providers\JetstreamServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
 
-        Intelrx\Sitesettings\SitesettingsProvider::class,
+    App\Providers\SiteSettingsServiceProvider::class,
     ])->toArray(),
 
     /*
