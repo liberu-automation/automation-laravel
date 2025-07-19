@@ -2,11 +2,20 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use App\Filament\Resources\WebHostingAccountResource\Pages\ListWebHostingAccounts;
+use App\Filament\Resources\WebHostingAccountResource\Pages\CreateWebHostingAccount;
+use App\Filament\Resources\WebHostingAccountResource\Pages\EditWebHostingAccount;
 use App\Filament\Resources\WebHostingAccountResource\Pages;
 use App\Models\WebHostingAccount;
 use App\Services\WebHostingControlPanelManager;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Filament\Tables;
@@ -15,23 +24,23 @@ class WebHostingAccountResource extends Resource
 {
     protected static ?string $model = WebHostingAccount::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-server';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-server';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('domain')
+        return $schema
+            ->components([
+                TextInput::make('domain')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('username')
+                TextInput::make('username')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('password')
+                TextInput::make('password')
                     ->password()
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Select::make('control_panel')
+                Select::make('control_panel')
                     ->options([
                         'virtualmin' => 'Virtualmin',
                         'cpanel' => 'cPanel',
@@ -46,17 +55,17 @@ class WebHostingAccountResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('domain'),
-                Tables\Columns\TextColumn::make('username'),
-                Tables\Columns\TextColumn::make('control_panel'),
-                Tables\Columns\TextColumn::make('status'),
+                TextColumn::make('domain'),
+                TextColumn::make('username'),
+                TextColumn::make('control_panel'),
+                TextColumn::make('status'),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('suspend')
+            ->recordActions([
+                EditAction::make(),
+                Action::make('suspend')
                     ->action(fn (WebHostingAccount $record) => static::suspendAccount($record))
                     ->requiresConfirmation(),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->action(fn (WebHostingAccount $record) => static::deleteAccount($record)),
             ]);
     }
@@ -71,9 +80,9 @@ class WebHostingAccountResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListWebHostingAccounts::route('/'),
-            'create' => Pages\CreateWebHostingAccount::route('/create'),
-            'edit' => Pages\EditWebHostingAccount::route('/{record}/edit'),
+            'index' => ListWebHostingAccounts::route('/'),
+            'create' => CreateWebHostingAccount::route('/create'),
+            'edit' => EditWebHostingAccount::route('/{record}/edit'),
         ];
     }
 
