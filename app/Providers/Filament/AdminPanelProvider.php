@@ -54,7 +54,7 @@ class AdminPanelProvider extends PanelProvider
                 // Widgets\FilamentInfoWidget::class,
             ])
             ->resources([
-                \App\Filament\Resources\WebHostingAccountResource::class,
+                \App\Filament\Resources\WebHostingAccounts\WebHostingAccountResource::class,
             ])
             ->middleware([
                 EncryptCookies::class,

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\WebHostingAccounts;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
@@ -9,9 +9,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use App\Filament\Resources\WebHostingAccountResource\Pages\ListWebHostingAccounts;
-use App\Filament\Resources\WebHostingAccountResource\Pages\CreateWebHostingAccount;
-use App\Filament\Resources\WebHostingAccountResource\Pages\EditWebHostingAccount;
+use App\Filament\Resources\WebHostingAccounts\Pages\ListWebHostingAccounts;
+use App\Filament\Resources\WebHostingAccounts\Pages\CreateWebHostingAccount;
+use App\Filament\Resources\WebHostingAccounts\Pages\EditWebHostingAccount;
 use App\Filament\Resources\WebHostingAccountResource\Pages;
 use App\Models\WebHostingAccount;
 use App\Services\WebHostingControlPanelManager;

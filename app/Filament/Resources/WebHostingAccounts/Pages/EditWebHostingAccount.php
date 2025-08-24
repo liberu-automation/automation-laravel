@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\WebHostingAccountResource\Pages;
+namespace App\Filament\Resources\WebHostingAccounts\Pages;
 
 use Filament\Actions\DeleteAction;
-use App\Filament\Resources\WebHostingAccountResource;
+use App\Filament\Resources\WebHostingAccounts\WebHostingAccountResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 
