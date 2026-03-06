@@ -17,4 +17,3 @@ Route::get('/', function () {
     return view('welcome');
 });
 require __DIR__.'/socialstream.php';
-require __DIR__.'/socialstream.php';

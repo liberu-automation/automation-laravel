@@ -117,15 +117,16 @@ abstract class BaseModule implements ModuleInterface
         $modulePath = $this->getModulePath();
         $moduleInfoPath = $modulePath . '/module.json';
 
+        $moduleInfo = [];
         if (File::exists($moduleInfoPath)) {
-            $moduleInfo = json_decode(File::get($moduleInfoPath), true);
-            
-            $this->name = $moduleInfo['name'] ?? class_basename($this);
-            $this->version = $moduleInfo['version'] ?? '1.0.0';
-            $this->description = $moduleInfo['description'] ?? '';
-            $this->dependencies = $moduleInfo['dependencies'] ?? [];
-            $this->config = $moduleInfo['config'] ?? [];
+            $moduleInfo = json_decode(File::get($moduleInfoPath), true) ?? [];
         }
+
+        $this->name = $moduleInfo['name'] ?? class_basename(static::class);
+        $this->version = $moduleInfo['version'] ?? '1.0.0';
+        $this->description = $moduleInfo['description'] ?? '';
+        $this->dependencies = $moduleInfo['dependencies'] ?? [];
+        $this->config = $moduleInfo['config'] ?? [];
     }
 
     /**
