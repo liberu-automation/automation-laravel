@@ -2,7 +2,6 @@
 
 namespace App\Filament\App\Pages;
 
-use App\Models\Team;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
@@ -13,16 +12,9 @@ class EditTeam extends EditTenantProfile
 {
     protected string $view = 'filament.pages.edit-team';
 
-    public $name = '';
-
     public static function getLabel(): string
     {
         return 'Edit Team';
-    }
-
-    public function mount(): void
-    {
-        abort_unless($this->user()->canCreateTeams(), 403);
     }
 
     public function form(Schema $schema): Schema
@@ -36,31 +28,10 @@ class EditTeam extends EditTenantProfile
             ]);
     }
 
-    public function submit(): void
-    {
-        $this->validate();
-
-        $team = Team::forceCreate([
-            'user_id'       => Filament::auth()->id(),
-            'name'          => $this->name,
-            'personal_team' => false,
-        ]);
-
-        $this->user()->teams()->attach($team, ['role' => 'admin']);
-        $this->user()->switchTeam($team);
-
-        $this->redirect(route('filament.pages.edit-team', ['team' => $team]));
-    }
-
     public function getBreadcrumbs(): array
     {
         return [
-            url()->current() => 'Create Team',
+            url()->current() => 'Edit Team',
         ];
-    }
-
-    private function user(): User
-    {
-        return Filament::auth()->user();
     }
 }
