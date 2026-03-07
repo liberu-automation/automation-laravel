@@ -3,7 +3,7 @@
 namespace App\Modules;
 
 use ReflectionClass;
-use Artisan;
+use Illuminate\Support\Facades\Artisan;
 use App\Modules\Contracts\ModuleInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;

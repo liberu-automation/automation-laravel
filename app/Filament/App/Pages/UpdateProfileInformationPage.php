@@ -4,6 +4,7 @@ namespace App\Filament\App\Pages;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
 class UpdateProfileInformationPage extends Page
@@ -30,16 +31,17 @@ class UpdateProfileInformationPage extends Page
         ]);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
-        return [
-            TextInput::make('name')
-                ->label('Name')
-                ->required(),
-            TextInput::make('email')
-                ->label('Email Address')
-                ->required(),
-        ];
+        return $schema
+            ->components([
+                TextInput::make('name')
+                    ->label('Name')
+                    ->required(),
+                TextInput::make('email')
+                    ->label('Email Address')
+                    ->required(),
+            ]);
     }
 
     public function submit(): void
