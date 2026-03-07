@@ -2,26 +2,21 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Actions\Action;
-use Filament\Actions\ViewAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\BulkAction;
-use App\Filament\Admin\Resources\Pages\ListModules;
-use App\Filament\Admin\Resources\Pages\ViewModule;
+use App\Filament\Admin\Resources\ModuleResource\Pages\ListModules;
+use App\Filament\Admin\Resources\ModuleResource\Pages\ViewModule;
 use App\Modules\ModuleManager;
-use Filament\Forms;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ModuleResource extends Resource
 {
@@ -52,7 +47,6 @@ class ModuleResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(static::getEloquentQuery())
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
@@ -71,16 +65,6 @@ class ModuleResource extends Resource
                     ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
                     ->limit(30),
             ])
-            ->filters([
-                TernaryFilter::make('enabled')
-                    ->label('Status')
-                    ->trueLabel('Enabled')
-                    ->falseLabel('Disabled')
-                    ->queries(
-                        true: fn (Builder $query) => $query->where('enabled', true),
-                        false: fn (Builder $query) => $query->where('enabled', false),
-                    ),
-            ])
             ->recordActions([
                 Action::make('toggle')
                     ->label(fn ($record) => $record->enabled ? 'Disable' : 'Enable')
@@ -88,7 +72,7 @@ class ModuleResource extends Resource
                     ->color(fn ($record) => $record->enabled ? 'danger' : 'success')
                     ->action(function ($record) {
                         $moduleManager = app(ModuleManager::class);
-                        
+
                         if ($record->enabled) {
                             $moduleManager->disable($record->name);
                         } else {
@@ -104,7 +88,7 @@ class ModuleResource extends Resource
                         $moduleManager = app(ModuleManager::class);
                         $moduleManager->install($record->name);
                     })
-                    ->visible(fn ($record) => !$record->enabled)
+                    ->visible(fn ($record) => ! $record->enabled)
                     ->requiresConfirmation(),
                 Action::make('uninstall')
                     ->label('Uninstall')
@@ -144,48 +128,6 @@ class ModuleResource extends Resource
                         ->requiresConfirmation(),
                 ]),
             ]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        $moduleManager = app(ModuleManager::class);
-        $modules = $moduleManager->getAllModulesInfo();
-
-        // Convert modules array to a collection that can be used with Filament
-        $query = new class extends Builder {
-            protected $modules;
-
-            public function __construct($modules)
-            {
-                $this->modules = collect($modules);
-            }
-
-            public function get($columns = ['*'])
-            {
-                return $this->modules->map(function ($module) {
-                    return (object) $module;
-                });
-            }
-
-            public function paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null)
-            {
-                return $this->modules->map(function ($module) {
-                    return (object) $module;
-                });
-            }
-
-            public function where($column, $operator = null, $value = null, $boolean = 'and')
-            {
-                if ($column === 'enabled') {
-                    $this->modules = $this->modules->filter(function ($module) use ($value) {
-                        return $module['enabled'] === $value;
-                    });
-                }
-                return $this;
-            }
-        };
-
-        return new $query($modules);
     }
 
     public static function getPages(): array

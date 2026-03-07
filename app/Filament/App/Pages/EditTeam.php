@@ -7,6 +7,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\EditTenantProfile;
+use Filament\Schemas\Schema;
 
 class EditTeam extends EditTenantProfile
 {
@@ -24,17 +25,18 @@ class EditTeam extends EditTenantProfile
         abort_unless($this->user()->canCreateTeams(), 403);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
-        return [
-            TextInput::make('name')
-                ->label('Team Name')
-                ->required()
-                ->maxLength(255),
-        ];
+        return $schema
+            ->components([
+                TextInput::make('name')
+                    ->label('Team Name')
+                    ->required()
+                    ->maxLength(255),
+            ]);
     }
 
-    public function submit()
+    public function submit(): void
     {
         $this->validate();
 
@@ -47,7 +49,7 @@ class EditTeam extends EditTenantProfile
         $this->user()->teams()->attach($team, ['role' => 'admin']);
         $this->user()->switchTeam($team);
 
-        return redirect()->route('filament.pages.edit-team', ['team' => $team]);
+        $this->redirect(route('filament.pages.edit-team', ['team' => $team]));
     }
 
     public function getBreadcrumbs(): array
