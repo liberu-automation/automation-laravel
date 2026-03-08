@@ -32,7 +32,6 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         $panel
-            ->default()
             ->id('admin')
             ->path('admin')
             ->login([AuthenticatedSessionController::class, 'create'])
@@ -43,18 +42,13 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Gray,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets/Home'), for: 'App\\Filament\\Admin\\Widgets\\Home')
             ->pages([
                 FilamentPage\Dashboard::class,
-                Pages\EditProfile::class,
-                // Pages\ApiTokenManagerPage::class,
             ])->widgets([
                 Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-            ])
-            ->resources([
-                \App\Filament\Resources\WebHostingAccounts\WebHostingAccountResource::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -75,17 +69,6 @@ class AdminPanelProvider extends PanelProvider
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
             ]);
 
-        // if (Features::hasApiFeatures()) {
-        //     $panel->userMenuItems([
-        //         MenuItem::make()
-        //             ->label('API Tokens')
-        //             ->icon('heroicon-o-key')
-        //             ->url(fn () => $this->shouldRegisterMenuItem()
-        //                 ? url(Pages\ApiTokenManagerPage::getUrl())
-        //                 : url($panel->getPath())),
-        //     ]);
-        // }
-
         if (Features::hasTeamFeatures()) {
             $panel
                 ->tenant(Team::class, ownershipRelationship: 'team')
@@ -104,7 +87,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel;
     }
 
-    public function boot()
+    public function boot(): void
     {
         /**
          * Disable Fortify routes.
@@ -119,6 +102,6 @@ class AdminPanelProvider extends PanelProvider
 
     public function shouldRegisterMenuItem(): bool
     {
-        return true; //auth()->user()?->hasVerifiedEmail() && Filament::hasTenancy() && Filament::getTenant();
+        return true;
     }
 }

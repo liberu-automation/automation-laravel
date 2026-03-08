@@ -8,7 +8,7 @@ use App\Http\Middleware\TeamsPermission;
 use App\Listeners\CreatePersonalTeam;
 use App\Listeners\SwitchTeam;
 use App\Models\Team;
-use Filament\Events\Auth\Registered;
+use Filament\Auth\Events\Registered;
 use Filament\Events\TenantSet;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
@@ -113,7 +113,7 @@ class AppPanelProvider extends PanelProvider
         return $panel;
     }
 
-    public function boot()
+    public function boot(): void
     {
         /**
          * Disable Fortify routes.
