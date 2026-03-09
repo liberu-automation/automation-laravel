@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\App\Pages;
 use App\Http\Middleware\TeamsPermission;
 use App\Models\Team;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -66,7 +67,7 @@ class AdminPanelProvider extends PanelProvider
                 TeamsPermission::class,
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                FilamentShieldPlugin::make()
                     ->navigationGroup('Administration')
             ]);
 
