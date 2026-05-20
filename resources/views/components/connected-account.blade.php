@@ -3,7 +3,7 @@
 <div>
     <div class="pl-3 flex items-center justify-between">
         <div class="flex items-center">
-            <x-socialstream-icons.provider-icon :provider="$provider['id']" class="h-6 w-6" />
+            <div class="h-6 w-6 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-600">{{ strtoupper(substr($provider['id'], 0, 1)) }}</div>
 
             <div class="ml-2">
                 <div class="text-sm font-semibold text-gray-600">
