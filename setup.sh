@@ -1,9 +1,5 @@
 #!/bin/bash
-<<<<<<< HEAD
-# Setup script for the control-panel-laravel project.
-=======
 # Setup script for the Liberu automation project.
->>>>>>> b41cc2506c372b51d736d898da2d62f36d1fe887
 #
 # This script provides installation options for Standalone, Docker, or Kubernetes deployments.
 # It handles composer and npm installations with fallback logic and error checking.
@@ -342,11 +338,7 @@ install_standalone() {
         case $cond in
             [Yy]* )
                 print_success "Starting server..."
-<<<<<<< HEAD
                 php artisan octane:start
-=======
-                php artisan serve
->>>>>>> b41cc2506c372b51d736d898da2d62f36d1fe887
                 break
                 ;;
             [Nn]* )
@@ -460,11 +452,7 @@ install_kubernetes() {
 # Main installation menu
 main() {
     clear
-<<<<<<< HEAD
-    print_header "LIBERU CONTROL PANEL - INSTALLER"
-=======
     print_header "LIBERU AUTOMATION - INSTALLER"
->>>>>>> b41cc2506c372b51d736d898da2d62f36d1fe887
 
     echo "Please select installation type:"
     echo ""
