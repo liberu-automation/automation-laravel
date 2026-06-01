@@ -25,7 +25,6 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
 {
     use HasApiTokens;
     use HasConnectedAccounts;
-    use HasRoles;
     use HasFactory;
     use HasProfilePhoto {
         HasProfilePhoto::profilePhotoUrl as getPhotoUrl;
@@ -33,7 +32,16 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
     use Notifiable;
     use SetsProfilePhotoFromUrl;
     use TwoFactorAuthenticatable;
-    use HasTeams;
+
+    // Resolve method name collision between Jetstream's HasTeams::teams
+    // and Spatie's HasRoles::teams by preferring HasTeams::teams and
+    // aliasing HasRoles::teams as rolesTeams in case it's needed.
+    use HasRoles {
+        HasRoles::teams as rolesTeams;
+    }
+    use HasTeams {
+        HasTeams::teams insteadof HasRoles;
+    }
 
     /**
      * The attributes that are mass assignable.
