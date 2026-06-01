@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: liberu-automation
+
+commonLabels:
+  app: liberu-automation
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - nginx-configmap.yaml
+  - secret.yaml
+  - pvc.yaml
+  - mysql.yaml
+  - redis.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
