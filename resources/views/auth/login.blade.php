@@ -6,9 +6,22 @@
             <div class="mb-4 text-sm text-gray-600">
                 {{ __('Please sign in to access the admin panel.') }}
             </div>
-        
+
+            @if (! empty(config('socialstream.providers')))
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600">{{ __('Sign in using a social provider:') }}</p>
+                    <div class="mt-3 space-y-2">
+                        @foreach(array_keys(config('socialstream.providers')) as $provider)
+                            <a href="{{ route('oauth.redirect', ['provider' => $provider]) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm text-gray-700">
+                                {{ __('Sign in with :provider', ['provider' => ucwords(str_replace(['-','_'], ' ', $provider))]) }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <x-validation-errors class="mb-4" />
-        
+
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
