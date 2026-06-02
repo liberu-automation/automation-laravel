@@ -2,164 +2,118 @@
 
 namespace App\Modules;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Module;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
 class ModuleServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        $this->registerModules();
-    }
-
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        $this->bootModules();
-    }
-
-    /**
-     * Register all modules found in the modules directory.
-     */
-    protected function registerModules(): void
-    {
         $modulesPath = app_path('Modules');
-        
-        if (!File::exists($modulesPath)) {
+        if (! File::exists($modulesPath)) {
             return;
         }
 
-        $modules = File::directories($modulesPath);
-
-        foreach ($modules as $modulePath) {
-            $moduleName = basename($modulePath);
-            $this->registerModule($moduleName, $modulePath);
+        foreach (File::directories($modulesPath) as $modulePath) {
+            $this->registerModule(basename($modulePath), $modulePath);
         }
     }
 
-    /**
-     * Register a specific module.
-     */
+    public function boot(): void
+    {
+        $modulesPath = app_path('Modules');
+        if (! File::exists($modulesPath)) {
+            return;
+        }
+
+        foreach (File::directories($modulesPath) as $modulePath) {
+            $this->bootModule(basename($modulePath), $modulePath);
+        }
+    }
+
     protected function registerModule(string $moduleName, string $modulePath): void
     {
-        // Register module service provider if it exists
-        $providerPath = $modulePath . '/Providers/' . $moduleName . 'ServiceProvider.php';
-        if (File::exists($providerPath)) {
-            $providerClass = "App\\Modules\\{$moduleName}\\Providers\\{$moduleName}ServiceProvider";
-            if (class_exists($providerClass)) {
-                $this->app->register($providerClass);
-            }
+        // Register own service provider first (always, so it can bind things)
+        $providerClass = "App\\Modules\\{$moduleName}\\Providers\\{$moduleName}ServiceProvider";
+        if (class_exists($providerClass)) {
+            $this->app->register($providerClass);
         }
 
-        // Register module configuration
-        $configPath = $modulePath . '/config';
+        // Config is always merged so it is available even when disabled
+        $configPath = "{$modulePath}/config";
         if (File::exists($configPath)) {
-            $configFiles = File::files($configPath);
-            foreach ($configFiles as $configFile) {
-                $configName = Str::snake($moduleName) . '.' . $configFile->getFilenameWithoutExtension();
-                $this->mergeConfigFrom($configFile->getPathname(), $configName);
+            foreach (File::files($configPath) as $configFile) {
+                $key = Str::snake($moduleName) . '.' . $configFile->getFilenameWithoutExtension();
+                $this->mergeConfigFrom($configFile->getPathname(), $key);
             }
         }
 
-        // Register module routes
-        $this->registerModuleRoutes($moduleName, $modulePath);
+        if (! $this->isModuleEnabled($moduleName)) {
+            return;
+        }
 
-        // Register module views
-        $viewsPath = $modulePath . '/resources/views';
+        // Routes (only for enabled modules)
+        $routesPath = "{$modulePath}/routes";
+        if (File::exists($routesPath)) {
+            foreach (['web.php', 'api.php', 'admin.php'] as $file) {
+                $path = "{$routesPath}/{$file}";
+                if (File::exists($path)) {
+                    $this->loadRoutesFrom($path);
+                }
+            }
+        }
+
+        // Views
+        $viewsPath = "{$modulePath}/resources/views";
         if (File::exists($viewsPath)) {
             $this->loadViewsFrom($viewsPath, Str::snake($moduleName));
         }
 
-        // Register module translations
-        $langPath = $modulePath . '/resources/lang';
+        // Translations
+        $langPath = "{$modulePath}/resources/lang";
         if (File::exists($langPath)) {
             $this->loadTranslationsFrom($langPath, Str::snake($moduleName));
         }
 
-        // Register module migrations
-        $migrationsPath = $modulePath . '/database/migrations';
+        // Migrations
+        $migrationsPath = "{$modulePath}/database/migrations";
         if (File::exists($migrationsPath)) {
             $this->loadMigrationsFrom($migrationsPath);
         }
     }
 
-    /**
-     * Register module routes.
-     */
-    protected function registerModuleRoutes(string $moduleName, string $modulePath): void
-    {
-        $routesPath = $modulePath . '/routes';
-        
-        if (!File::exists($routesPath)) {
-            return;
-        }
-
-        // Web routes
-        $webRoutesPath = $routesPath . '/web.php';
-        if (File::exists($webRoutesPath)) {
-            $this->loadRoutesFrom($webRoutesPath);
-        }
-
-        // API routes
-        $apiRoutesPath = $routesPath . '/api.php';
-        if (File::exists($apiRoutesPath)) {
-            $this->loadRoutesFrom($apiRoutesPath);
-        }
-
-        // Admin routes (for Filament integration)
-        $adminRoutesPath = $routesPath . '/admin.php';
-        if (File::exists($adminRoutesPath)) {
-            $this->loadRoutesFrom($adminRoutesPath);
-        }
-    }
-
-    /**
-     * Boot all registered modules.
-     */
-    protected function bootModules(): void
-    {
-        $modulesPath = app_path('Modules');
-        
-        if (!File::exists($modulesPath)) {
-            return;
-        }
-
-        $modules = File::directories($modulesPath);
-
-        foreach ($modules as $modulePath) {
-            $moduleName = basename($modulePath);
-            $this->bootModule($moduleName, $modulePath);
-        }
-    }
-
-    /**
-     * Boot a specific module.
-     */
     protected function bootModule(string $moduleName, string $modulePath): void
     {
-        // Publish module assets
-        $assetsPath = $modulePath . '/resources/assets';
+        // Assets and config are always publishable regardless of enabled state
+        $assetsPath = "{$modulePath}/resources/assets";
         if (File::exists($assetsPath)) {
-            $this->publishes([
-                $assetsPath => public_path("modules/{$moduleName}"),
-            ], Str::snake($moduleName) . '-assets');
+            $this->publishes(
+                [$assetsPath => public_path("modules/{$moduleName}")],
+                Str::snake($moduleName) . '-assets'
+            );
         }
 
-        // Publish module configuration
-        $configPath = $modulePath . '/config';
+        $configPath = "{$modulePath}/config";
         if (File::exists($configPath)) {
-            $configFiles = File::files($configPath);
-            foreach ($configFiles as $configFile) {
-                $this->publishes([
-                    $configFile->getPathname() => config_path(Str::snake($moduleName) . '.' . $configFile->getFilename()),
-                ], Str::snake($moduleName) . '-config');
+            foreach (File::files($configPath) as $configFile) {
+                $this->publishes(
+                    [$configFile->getPathname() => config_path(Str::snake($moduleName) . '.' . $configFile->getFilename())],
+                    Str::snake($moduleName) . '-config'
+                );
             }
+        }
+    }
+
+    protected function isModuleEnabled(string $moduleName): bool
+    {
+        try {
+            $module = Module::where('name', $moduleName)->first();
+
+            return $module ? (bool) $module->enabled : true;
+        } catch (\Throwable) {
+            return true;
         }
     }
 }

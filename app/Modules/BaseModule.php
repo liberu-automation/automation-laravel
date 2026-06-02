@@ -2,11 +2,15 @@
 
 namespace App\Modules;
 
-use ReflectionClass;
-use Illuminate\Support\Facades\Artisan;
 use App\Modules\Contracts\ModuleInterface;
+use App\Modules\Events\ModuleDisabled;
+use App\Modules\Events\ModuleEnabled;
+use App\Modules\Events\ModuleInstalled;
+use App\Modules\Events\ModuleUninstalled;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use ReflectionClass;
 
 abstract class BaseModule implements ModuleInterface
 {
@@ -68,6 +72,7 @@ abstract class BaseModule implements ModuleInterface
     {
         Cache::put("module.{$this->name}.enabled", true);
         $this->onEnable();
+        ModuleEnabled::dispatch($this);
     }
 
     /**
@@ -77,6 +82,7 @@ abstract class BaseModule implements ModuleInterface
     {
         Cache::put("module.{$this->name}.enabled", false);
         $this->onDisable();
+        ModuleDisabled::dispatch($this);
     }
 
     /**
@@ -88,6 +94,7 @@ abstract class BaseModule implements ModuleInterface
         $this->publishAssets();
         $this->onInstall();
         $this->enable();
+        ModuleInstalled::dispatch($this);
     }
 
     /**
@@ -99,6 +106,7 @@ abstract class BaseModule implements ModuleInterface
         $this->rollbackMigrations();
         $this->removeAssets();
         $this->onUninstall();
+        ModuleUninstalled::dispatch($this);
     }
 
     /**
@@ -144,10 +152,11 @@ abstract class BaseModule implements ModuleInterface
     protected function runMigrations(): void
     {
         $migrationsPath = $this->getModulePath() . '/database/migrations';
-        
+
         if (File::exists($migrationsPath)) {
+            $relativePath = str_replace(base_path() . '/', '', $migrationsPath);
             Artisan::call('migrate', [
-                '--path' => 'app/Modules/' . $this->name . '/database/migrations',
+                '--path' => $relativePath,
                 '--force' => true,
             ]);
         }

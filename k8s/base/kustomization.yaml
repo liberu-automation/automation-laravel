@@ -17,3 +17,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+  - network-policy.yaml
+  - resource-quota.yaml

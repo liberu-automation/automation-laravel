@@ -25,6 +25,26 @@ print_warning() { print_message "$YELLOW" "WARNING: $1"; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # ---------------------------------------------------------------------------
+# Prerequisite checks
+# ---------------------------------------------------------------------------
+check_php_version() {
+    if ! command_exists php; then
+        print_error "PHP is not installed. Install PHP 8.5+ first."
+        exit 1
+    fi
+
+    local php_version
+    php_version=$(php -r 'echo PHP_VERSION;')
+
+    if php -r "exit(version_compare(PHP_VERSION, '8.5', '>=') ? 0 : 1);"; then
+        print_success "PHP ${php_version} meets the minimum requirement (8.5+)"
+    else
+        print_error "PHP ${php_version} is below the required version (8.5+). Please upgrade."
+        exit 1
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # Composer bootstrap
 # ---------------------------------------------------------------------------
 ensure_composer() {
@@ -38,10 +58,6 @@ ensure_composer() {
 
     if ! command_exists curl; then
         print_error "curl is required to download Composer. Install curl or Composer manually."
-        return 1
-    fi
-    if ! command_exists php; then
-        print_error "PHP is required. Install PHP first."
         return 1
     fi
 
@@ -100,7 +116,12 @@ install_npm_dependencies() {
         return 1
     fi
 
-    npm install
+    # Prefer ci (clean install) when lockfile exists for reproducible builds
+    if [ -f "package-lock.json" ]; then
+        npm ci
+    else
+        npm install
+    fi
     print_success "npm dependencies installed"
 }
 
@@ -124,6 +145,8 @@ install_standalone() {
     echo "===== USER: [$(whoami)] ====="
     echo "===== PHP: [$(php -r 'echo phpversion();')] ====="
     echo ""
+
+    check_php_version
 
     # .env setup
     read -rp "Copy .env.example to .env? (y/n) " -n 1; echo
@@ -156,7 +179,7 @@ install_standalone() {
     read -rp "Run migrate:fresh (destroys all data)? (y/n) " -n 1; echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         php artisan migrate:fresh || { print_error "Migration failed"; exit 1; }
-        print_success "Database migrated"
+        print_success "Database migrated (fresh)"
     else
         php artisan migrate || { print_error "Migration failed"; exit 1; }
         print_success "Database migrated"
@@ -167,6 +190,20 @@ install_standalone() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         php artisan db:seed || print_warning "Seeding failed — continuing"
         print_success "Database seeded"
+    fi
+
+    print_header "STORAGE:LINK"
+    if php artisan storage:link; then
+        print_success "Storage link created"
+    else
+        print_warning "storage:link failed — public uploads may not work"
+    fi
+
+    print_header "FILAMENT:SHIELD"
+    read -rp "Install Filament Shield (role/permission policies)? (y/n) " -n 1; echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        php artisan shield:install --fresh || print_warning "shield:install failed — continuing"
+        print_success "Filament Shield installed"
     fi
 
     print_header "PHPUNIT TESTS"
@@ -215,7 +252,7 @@ install_docker() {
     if [ ! -f ".env" ]; then
         cp .env.example .env
         print_warning "Copied .env.example -> .env. Please review it before continuing."
-        read -rp "Press Enter to continue..."
+        read -rp "Press Enter to continue..." || true
     fi
 
     if command_exists docker-compose; then
@@ -245,21 +282,32 @@ install_kubernetes() {
         exit 1
     fi
 
-    # Determine whether to use kustomize or raw manifests
-    OVERLAY_DIR="${K8S_DIR}/overlays/production"
+    echo "Select environment:"
+    echo "  1) development"
+    echo "  2) production"
+    echo ""
+    read -rp "Enter choice (1-2): " env_choice
+    case $env_choice in
+        1) OVERLAY="development" ;;
+        2) OVERLAY="production" ;;
+        *) print_warning "Invalid choice — defaulting to production"; OVERLAY="production" ;;
+    esac
+
+    OVERLAY_DIR="${K8S_DIR}/overlays/${OVERLAY}"
+
     if [ -d "$OVERLAY_DIR" ] && [ -f "${OVERLAY_DIR}/kustomization.yaml" ]; then
-        print_info "Kustomize overlays detected — using overlay: production"
+        print_info "Kustomize overlay detected: ${OVERLAY}"
 
         if [ ! -f ".env" ]; then
             cp .env.example .env
             print_warning "Copied .env.example -> .env. Please review it."
-            read -rp "Press Enter to continue..."
+            read -rp "Press Enter to continue..." || true
         fi
 
         # Validate before applying
         if [ -f "${K8S_DIR}/validate.sh" ]; then
             print_info "Validating manifests..."
-            if bash "${K8S_DIR}/validate.sh" production; then
+            if bash "${K8S_DIR}/validate.sh" "$OVERLAY"; then
                 print_success "Manifests validated"
             else
                 print_error "Manifest validation failed. Aborting."
@@ -273,18 +321,18 @@ install_kubernetes() {
             kubectl apply -k "$OVERLAY_DIR"
         fi
 
-        print_success "Kubernetes resources applied via Kustomize"
+        print_success "Kubernetes resources applied via Kustomize (${OVERLAY})"
     else
-        # Fallback: apply raw YAML files from k8s/ root
-        print_info "No Kustomize overlays found — applying raw manifests from ${K8S_DIR}/"
+        # Fallback: apply raw YAML files from k8s/base/
+        print_info "No Kustomize overlay found — applying base manifests from ${K8S_DIR}/base/"
 
         if [ ! -f ".env" ]; then
             cp .env.example .env
             print_warning "Copied .env.example -> .env. Please review it."
-            read -rp "Press Enter to continue..."
+            read -rp "Press Enter to continue..." || true
         fi
 
-        kubectl apply -f "${K8S_DIR}/" --recursive || {
+        kubectl apply -f "${K8S_DIR}/base/" --recursive || {
             print_error "Failed to apply Kubernetes configurations"
             exit 1
         }
