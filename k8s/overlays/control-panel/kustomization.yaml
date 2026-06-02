@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace follows the liberu-control-panel hosting-{domain} convention.
+# Override `namespace` and the host patch below for each managed site.
+namespace: hosting-automation-example-com
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+    target:
+      kind: Deployment
+      name: liberu-automation
+  - patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: automation.example.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: automation.example.com
+    target:
+      kind: Ingress
+      name: liberu-automation
+
+configMapGenerator:
+  - name: liberu-automation-config
+    behavior: merge
+    literals:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - LOG_LEVEL=warning
+      - APP_URL=https://automation.example.com
+
+images:
+  - name: ghcr.io/liberu-automation/automation-laravel
+    newTag: latest

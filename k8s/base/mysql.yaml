@@ -42,9 +42,9 @@ spec:
               key: DB_PASSWORD
         - name: MYSQL_DATABASE
           valueFrom:
-            configMapKeyRef:
-              name: liberu-automation-config
-              key: APP_ENV
+            secretKeyRef:
+              name: liberu-automation-secret
+              key: DB_DATABASE
         - name: MYSQL_USER
           valueFrom:
             secretKeyRef:

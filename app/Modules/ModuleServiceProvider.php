@@ -11,26 +11,37 @@ class ModuleServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $modulesPath = app_path('Modules');
-        if (! File::exists($modulesPath)) {
-            return;
-        }
-
-        foreach (File::directories($modulesPath) as $modulePath) {
+        foreach ($this->moduleDirectories() as $modulePath) {
             $this->registerModule(basename($modulePath), $modulePath);
         }
     }
 
     public function boot(): void
     {
-        $modulesPath = app_path('Modules');
-        if (! File::exists($modulesPath)) {
-            return;
-        }
-
-        foreach (File::directories($modulesPath) as $modulePath) {
+        foreach ($this->moduleDirectories() as $modulePath) {
             $this->bootModule(basename($modulePath), $modulePath);
         }
+    }
+
+    protected function moduleDirectories(): array
+    {
+        $dirs = [];
+
+        $legacyPath = app_path('Modules');
+        if (File::exists($legacyPath)) {
+            foreach (File::directories($legacyPath) as $path) {
+                $dirs[] = $path;
+            }
+        }
+
+        $modularPath = base_path(config('modular.modules_directory', 'app-modules'));
+        if (File::exists($modularPath)) {
+            foreach (File::directories($modularPath) as $path) {
+                $dirs[] = $path;
+            }
+        }
+
+        return $dirs;
     }
 
     protected function registerModule(string $moduleName, string $modulePath): void

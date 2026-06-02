@@ -3,6 +3,8 @@
 #
 # Provides installation options: Standalone, Docker, or Kubernetes.
 # Handles composer/npm installs with fallback logic and error checking.
+#
+# Usage: ./setup.sh [--help]
 
 set -euo pipefail
 
@@ -25,6 +27,39 @@ print_warning() { print_message "$YELLOW" "WARNING: $1"; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # ---------------------------------------------------------------------------
+# Help
+# ---------------------------------------------------------------------------
+show_help() {
+    cat <<EOF
+Liberu Automation Setup Script
+
+Usage: ./setup.sh [OPTIONS]
+
+OPTIONS:
+  --help        Show this help message and exit
+
+INSTALLATION MODES:
+  1) Standalone  Local/bare-metal install: composer, npm, migrate, seed
+  2) Docker      docker compose up with auto .env copy
+  3) Kubernetes  kubectl apply via Kustomize overlays (dev/prod/control-panel)
+
+EXAMPLES:
+  ./setup.sh                  # Interactive menu
+  bash setup.sh               # Same as above
+
+KUBERNETES OVERLAYS:
+  k8s/overlays/development/   Single replica, debug logging
+  k8s/overlays/production/    3 replicas + HPA, warning logging
+  k8s/overlays/control-panel/ hosting-{domain} namespace for liberu-control-panel
+
+REQUIREMENTS:
+  PHP 8.5+, Composer, Node.js 20+, npm
+
+EOF
+    exit 0
+}
+
+# ---------------------------------------------------------------------------
 # Prerequisite checks
 # ---------------------------------------------------------------------------
 check_php_version() {
@@ -41,6 +76,41 @@ check_php_version() {
     else
         print_error "PHP ${php_version} is below the required version (8.5+). Please upgrade."
         exit 1
+    fi
+}
+
+check_node_version() {
+    if ! command_exists node; then
+        print_warning "Node.js is not installed — frontend assets will be skipped"
+        return 1
+    fi
+
+    local node_version
+    node_version=$(node --version | sed 's/v//')
+    local node_major
+    node_major=$(echo "$node_version" | cut -d. -f1)
+
+    if [ "$node_major" -ge 20 ]; then
+        print_success "Node.js v${node_version} meets the minimum requirement (20+)"
+    else
+        print_warning "Node.js v${node_version} is below the recommended version (20+). Consider upgrading."
+    fi
+}
+
+check_required_env_vars() {
+    local missing=0
+    for var in APP_KEY DB_DATABASE DB_USERNAME DB_PASSWORD; do
+        if ! grep -qE "^${var}=.+" .env 2>/dev/null; then
+            print_warning "Missing or empty env var: ${var}"
+            missing=1
+        fi
+    done
+    if [ "$missing" -eq 1 ]; then
+        print_warning "Some required env vars are not set. Migrations may fail."
+        read -rp "Continue anyway? (y/n) " -n 1; echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
     fi
 }
 
@@ -101,6 +171,11 @@ install_composer_dependencies() {
 install_npm_dependencies() {
     print_header "NPM INSTALL"
 
+    if ! command_exists npm; then
+        print_warning "npm is not installed — skipping frontend install"
+        return 1
+    fi
+
     if [ -d "node_modules" ]; then
         print_info "node_modules/ already exists."
         read -rp "Reinstall npm dependencies? (y/n) " -n 1
@@ -109,11 +184,6 @@ install_npm_dependencies() {
             print_success "Skipping npm install"
             return 0
         fi
-    fi
-
-    if ! command_exists npm; then
-        print_error "npm is not installed. Install Node.js from https://nodejs.org/"
-        return 1
     fi
 
     # Prefer ci (clean install) when lockfile exists for reproducible builds
@@ -129,7 +199,7 @@ build_frontend_assets() {
     print_header "NPM BUILD"
 
     if ! command_exists npm; then
-        print_error "npm is not installed."
+        print_warning "npm is not installed — skipping frontend build"
         return 1
     fi
 
@@ -147,12 +217,14 @@ install_standalone() {
     echo ""
 
     check_php_version
+    check_node_version || true
 
     # .env setup
     read -rp "Copy .env.example to .env? (y/n) " -n 1; echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         cp .env.example .env
         print_success "Copied .env.example -> .env"
+        print_info "Edit .env now and set DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD."
         read -rp "Have you updated the database credentials in .env? (y/n) " -n 1; echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             print_warning "Please configure .env and re-run this script."
@@ -175,7 +247,9 @@ install_standalone() {
         exit 1
     fi
 
-    print_header "MIGRATE:FRESH"
+    check_required_env_vars
+
+    print_header "MIGRATE"
     read -rp "Run migrate:fresh (destroys all data)? (y/n) " -n 1; echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         php artisan migrate:fresh || { print_error "Migration failed"; exit 1; }
@@ -193,7 +267,7 @@ install_standalone() {
     fi
 
     print_header "STORAGE:LINK"
-    if php artisan storage:link; then
+    if php artisan storage:link 2>/dev/null || true; then
         print_success "Storage link created"
     else
         print_warning "storage:link failed — public uploads may not work"
@@ -216,6 +290,7 @@ install_standalone() {
     print_header "OPTIMIZE:CLEAR"
     php artisan optimize:clear
     php artisan route:clear
+    php artisan view:clear
 
     print_success "=================================="
     print_success "============== DONE =============="
@@ -255,10 +330,23 @@ install_docker() {
         read -rp "Press Enter to continue..." || true
     fi
 
-    if command_exists docker-compose; then
-        docker-compose up -d --build
-    else
-        docker compose up -d --build
+    local compose_cmd="docker compose"
+    command_exists docker-compose && compose_cmd="docker-compose"
+
+    $compose_cmd up -d --build
+
+    print_info "Waiting for containers to be ready..."
+    sleep 5
+
+    # Run post-up artisan commands inside the app container
+    local app_container
+    app_container=$($compose_cmd ps -q app 2>/dev/null | head -1 || true)
+
+    if [ -n "$app_container" ]; then
+        print_info "Running post-startup artisan commands..."
+        docker exec "$app_container" php artisan storage:link 2>/dev/null || true
+        docker exec "$app_container" php artisan optimize:clear 2>/dev/null || true
+        print_success "Post-startup commands complete"
     fi
 
     print_success "Docker containers started — app available at http://localhost:8000"
@@ -267,6 +355,29 @@ install_docker() {
 # ---------------------------------------------------------------------------
 # Kubernetes
 # ---------------------------------------------------------------------------
+
+generate_k8s_secret() {
+    print_header "GENERATE K8S SECRET"
+    print_info "Generating a k8s secret patch from your .env file..."
+
+    if [ ! -f ".env" ]; then
+        print_error ".env not found. Cannot generate secret."
+        return 1
+    fi
+
+    local app_key db_password redis_pass
+    app_key=$(grep    "^APP_KEY="        .env | cut -d= -f2-)
+    db_password=$(grep "^DB_PASSWORD="   .env | cut -d= -f2-)
+    redis_pass=$(grep  "^REDIS_PASSWORD=" .env | cut -d= -f2- || echo "")
+
+    cat <<EOF
+# Paste this into k8s/base/secret.yaml before applying:
+  APP_KEY: "${app_key}"
+  DB_PASSWORD: "${db_password}"
+  REDIS_PASSWORD: "${redis_pass}"
+EOF
+}
+
 install_kubernetes() {
     print_header "KUBERNETES INSTALLATION"
 
@@ -285,23 +396,35 @@ install_kubernetes() {
     echo "Select environment:"
     echo "  1) development"
     echo "  2) production"
+    echo "  3) control-panel  (hosting-{domain} namespace for liberu-control-panel)"
     echo ""
-    read -rp "Enter choice (1-2): " env_choice
+    read -rp "Enter choice (1-3): " env_choice
     case $env_choice in
         1) OVERLAY="development" ;;
         2) OVERLAY="production" ;;
+        3) OVERLAY="control-panel" ;;
         *) print_warning "Invalid choice — defaulting to production"; OVERLAY="production" ;;
     esac
 
     OVERLAY_DIR="${K8S_DIR}/overlays/${OVERLAY}"
 
     if [ -d "$OVERLAY_DIR" ] && [ -f "${OVERLAY_DIR}/kustomization.yaml" ]; then
-        print_info "Kustomize overlay detected: ${OVERLAY}"
+        print_info "Kustomize overlay: ${OVERLAY}"
 
         if [ ! -f ".env" ]; then
             cp .env.example .env
             print_warning "Copied .env.example -> .env. Please review it."
             read -rp "Press Enter to continue..." || true
+        fi
+
+        # Offer to echo secret values from .env
+        read -rp "Show secret values from .env for k8s/base/secret.yaml? (y/n) " -n 1; echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            generate_k8s_secret
+            read -rp "Have you updated k8s/base/secret.yaml? (y/n) " -n 1; echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_warning "Update k8s/base/secret.yaml with real secrets before applying."
+            fi
         fi
 
         # Validate before applying
@@ -321,7 +444,12 @@ install_kubernetes() {
             kubectl apply -k "$OVERLAY_DIR"
         fi
 
+        local ns
+        ns=$(grep "^namespace:" "${OVERLAY_DIR}/kustomization.yaml" | head -1 | awk '{print $2}')
+        ns="${ns:-liberu-automation}"
+
         print_success "Kubernetes resources applied via Kustomize (${OVERLAY})"
+        print_info "Check status with: kubectl get pods -n ${ns}"
     else
         # Fallback: apply raw YAML files from k8s/base/
         print_info "No Kustomize overlay found — applying base manifests from ${K8S_DIR}/base/"
@@ -338,15 +466,21 @@ install_kubernetes() {
         }
 
         print_success "Kubernetes resources applied"
+        print_info "Check status with: kubectl get pods -n liberu-automation"
     fi
-
-    print_info "Check status with: kubectl get pods -n liberu-automation"
 }
 
 # ---------------------------------------------------------------------------
 # Main menu
 # ---------------------------------------------------------------------------
 main() {
+    # Handle --help flag
+    for arg in "$@"; do
+        case "$arg" in
+            --help|-h) show_help ;;
+        esac
+    done
+
     clear
     print_header "LIBERU AUTOMATION - INSTALLER"
 
@@ -370,4 +504,4 @@ main() {
     done
 }
 
-main
+main "$@"

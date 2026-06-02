@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: liberu-automation
+  name: hosting-automation-example-com
   labels:
-    name: liberu-automation
+    name: hosting-automation-example-com
     app: automation
     control-panel.liberu.io/managed: "true"

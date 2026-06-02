@@ -2,25 +2,17 @@
 
 namespace App\Http\Livewire;
 
-use App\Actions\Jetstream\CreateTeam as CreateTeamAction;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Jetstream\Contracts\CreatesTeams;
 use Laravel\Jetstream\Http\Livewire\CreateTeamForm;
 
 class CreateTeam extends CreateTeamForm
 {
-    /**
-     * Create a new team.
-     *
-     * @return void
-     */
-    public function createTeam()
+    public function createTeam(CreatesTeams $creator)
     {
-        $this->validate();
+        $this->resetErrorBag();
 
-        $team = app(CreateTeamAction::class)->create(
-            Auth::user(),
-            ['name' => $this->state['name']]
-        );
+        $team = $creator->create(Auth::user(), $this->state);
 
         return redirect()->route('filament.pages.edit-team', ['team' => $team]);
     }
