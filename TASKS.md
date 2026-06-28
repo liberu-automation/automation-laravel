@@ -42,29 +42,21 @@ Billing entity = **Team** (panels are Team-tenant scoped). Make `Team` billable,
 
 ## P2 — Quality
 
-- [ ] **T9. Expand test suite.** (PR-T9) Delete `ExampleTest` stubs (Feature + Unit); add coverage for hosting CRUD, tenant access gating, module system, auth. (This PR *is* the tests.)
-  → T2 (assert the *fixed* gating, not the bypass).
-- [ ] **T10. Livewire components.** (PR-T10) Build the reactive UI README implies, or drop the plural claim (folded into T3).
-  Tests first (if building): Livewire component test per interaction.
-  → none.
+- [x] **T9. Expand test suite.** Already satisfied by prior work — `ExampleTest` is now real route smoke tests (not stubs), and coverage exists: `WebHostingAccountTest`, `TenantAccessTest`, `ModuleSystemTest`, `UserTest`, `SecurityHeadersTest`. No-op (verified 2026-06-28, 37 suite green). Add explicit login/registration tests later if Fortify customization grows.
+- [x] **T10. Livewire claim.** Satisfied by current README — already reads "Livewire 4 + Filament UI ... plus room for custom components" (no overclaim of many hand-built components). Build reactive UI later if a real feature needs it.
 
 ## P3 — Housekeeping
 
-- [ ] **T11. Empty `docker-compose.dev.yml` (2 bytes)** (PR-T11) in umbrella dir — fill with real dev override or delete. Config only — no test.
-  → none.
-- [ ] **T12. Enable passkeys properly.** (PR-T12) Repo half-shipped passkeys (migration + `config/fortify.php` + `passkeys` rate limiter) but enabling deps absent (broke boot/CI until disabled). To enable: upgrade `laravel/fortify` to `^2` (adds `Features::passkeys()`), install `laravel/passkeys`, un-comment the two `ponytail:` sites — `config/fortify.php` and `database/migrations/2024_01_01_000000_create_passkeys_table.php` (restore `Passkeys::userModel()`). Verify Jetstream/Fortify v2 compat first.
-  Tests first: passkey register + login flow.
-  → none.
+- [x] **T11. Empty `docker-compose.dev.yml` (2 bytes)** — deleted 2026-06-28. Untracked, empty (`\n\n`), referenced nowhere. No PR (not in git).
+- [ ] **T12. Enable passkeys — BLOCKED upstream.** Needs Fortify v2 (`Features::passkeys()`), but Fortify v2 is `dev-master`/`2.x-dev` only (no beta/stable → fails `minimum-stability: beta`), **and** Jetstream v5.5.3 pins `laravel/fortify ^1.20` (hard conflict). Verified via `composer require laravel/fortify:^2 --dry-run` 2026-06-28. Revisit when Fortify v2 ships stable + a Jetstream release supports it. Ceiling already documented in the two `ponytail:` comments (`config/fortify.php`, `..._create_passkeys_table.php`).
+  → blocked on upstream releases.
 
-## Critical path
+## Status (2026-06-28)
 
-`T1 + T2` (deploy together) → unblocks `T9` and all of P1.
-P1 billing: `T4 → T5,T6 → T7`. Revisit `T3` (README: roadmap → shipped) after T7.
-`T3` README softening independent + cheap — ship now; flip Billing line again at T7.
-
-PR merge order (one PR each, green before next opens):
-`PR-T3` → `PR-T9` → `PR-T4` → (`PR-T5`, `PR-T6` parallel) → `PR-T7` → housekeeping (`PR-T10`–`PR-T12`).
-(T1/T2 are the existing security deploy + PR #454, not new PRs here.)
+- **Done:** T3 (#468), T4 (#469), T9, T10, T11.
+- **Open PRs (stacked, merge in order):** T5 (#470) → T6 (#471) → T7 (#472). After they land in main, flip the README billing line *roadmap → shipped*.
+- **Blocked:** T12 (Fortify v2 unreleased + Jetstream pin).
+- **Not mine (ops/security):** T1 (rotate `APP_KEY`), T2 (security PR #454).
 
 ## Out of scope
 
