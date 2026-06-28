@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Team;
 use App\Modules\ModuleManager;
 use App\Modules\ModuleServiceProvider;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register the module manager as a singleton
         $this->app->singleton(ModuleManager::class, function ($app) {
-            return new ModuleManager();
+            return new ModuleManager;
         });
 
         // Register the module service provider
@@ -27,8 +30,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Billing entity is the Team (Filament panels are Team-tenant scoped), not the User.
+        Cashier::useCustomerModel(Team::class);
+
         if ($this->app->environment('production')) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
         }
     }
 }
