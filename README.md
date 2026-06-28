@@ -29,12 +29,12 @@
 
 ## About Liberu Automation
 
-Liberu Automation is an open-source Laravel 13 application that gives teams a powerful, extensible platform for automating hosting and operational workflows, with billing on the roadmap. Built on PHP 8.5, Filament 5 and Livewire 4, it delivers a rich admin interface out of the box — no paid plugins, no lock-in. Whether you are managing a single server or orchestrating a multi-tenant SaaS, Liberu Automation provides the foundation you need with the flexibility to adapt.
+Liberu Automation is an open-source Laravel 13 application that gives teams a powerful, extensible platform for automating hosting and operational workflows, including subscription billing. Built on PHP 8.5, Filament 5 and Livewire 4, it delivers a rich admin interface out of the box — no paid plugins, no lock-in. Whether you are managing a single server or orchestrating a multi-tenant SaaS, Liberu Automation provides the foundation you need with the flexibility to adapt.
 
 ## Main Features
 
 - **Hosting control panel** — ready-to-use primitives for managing users, teams, accounts and site settings across environments.
-- **Billing automation** _(roadmap)_ — planned hooks and workflow triggers to slot into payment/invoicing pipelines. Not yet implemented.
+- **Subscription billing** — Stripe-powered plans via Laravel Cashier, billed per Team. Hosted Checkout subscribe flow, signature-verified webhooks, and automatic provision/suspend of hosting on subscription state.
 - **Filament 5 admin resources** — polished, responsive admin panels generated from your Eloquent models with minimal boilerplate.
 - **Livewire 4 + Filament UI** — reactive admin interfaces powered by Livewire under Filament, plus room for custom components.
 - **Pluggable modules architecture** — add or remove feature modules without touching core logic; extend via service providers and events.
