@@ -44,21 +44,14 @@ then quality. `→` marks a blocking dependency.
   soften "Livewire 4 components" and "Comprehensive test suite" to match reality.
   → depends on T8 decision (build billing vs drop claim).
 
-## P1 — Missing core feature: Billing automation
+## P1 — Missing core feature: Billing automation — **DEFERRED (roadmap)**
 
-Largest gap — claimed, entirely absent. Decompose only if the product actually needs it
-(T8 gate). All build sub-tasks → **T2 merged** (tenancy correct before money touches data).
+Largest gap — claimed, entirely absent.
 
-- [ ] **T8. GATE: build billing or drop the claim?** Product decision. If *drop* → only
-  T3 runs and P1 closes. If *build* → T4–T7 proceed. → none (decision, do first in P1).
-- [ ] **T4. Decide payment provider + model.** Stripe is already wired at the org level
-  (MCP/plugin present) — likely target. Output: data model (invoices, subscriptions,
-  charges) scoped to `Team` tenant. → T8.
-- [ ] **T5. Invoice/subscription migrations + Eloquent models.** → T4.
-- [ ] **T6. Provider integration + webhook handling** (signature-verified, CSRF-excluded
-  webhook route only). → T5.
-- [ ] **T7. Workflow triggers** (Jobs/Listeners/Events on payment lifecycle) + seeders.
-  → T6.
+- [x] **T8. GATE — decided 2026-06-28: roadmap-only.** No billing code built now. README
+  marks Billing as *roadmap* (handled in T3). T4–T7 deferred until a build is greenlit.
+- [ ] ~~T4–T7 (provider, models, webhooks, triggers)~~ — **deferred**, not in current scope.
+  If greenlit later: all → **T2 merged** first (tenancy correct before money touches data).
 
 ## P2 — Quality
 
