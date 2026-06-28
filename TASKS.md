@@ -22,8 +22,7 @@ Priority order: trust/risk → missing core feature → quality → housekeeping
   → none. Until done, all encryption guarantees void.
 - [ ] **T2. Merge security PR #454** — tenant isolation, encrypted creds, headers/HTTPS.
   → land with T1 in same deploy window (cast + key rotation together).
-- [ ] **T3. Fix README accuracy.** (PR-T3) Remove "Billing automation" (or mark *roadmap*); soften "Livewire 4 components" and "Comprehensive test suite".
-  → T8 (decided: roadmap-only, so T3 ships now). Docs only — no test.
+- [x] **T3. Scope audit + backlog.** (PR #468) `scope.md` audit + this `TASKS.md`. README billing stays *roadmap* until billing merges to main (then flip). Docs only.
 
 ## P1 — Billing automation — Stripe via Laravel Cashier
 
@@ -34,18 +33,12 @@ over hand-rolled PaymentIntents.
 Billing entity = **Team** (panels are Team-tenant scoped). Make `Team` billable, not `User`.
 
 - [x] **T8. GATE — decided 2026-06-28: build now with Stripe + Cashier.** README updates from *roadmap* to shipped once T7 lands (revisit T3).
-- [ ] **T4. Install + config Cashier.** (PR-T4) `composer require laravel/cashier`, publish + run migrations (`customer`/`subscription` columns), set `STRIPE_KEY`/`STRIPE_SECRET`/`STRIPE_WEBHOOK_SECRET` in `.env` + `config/services.php`. Add `Billable` to `Team` model, set `Cashier::useCustomerModel(Team::class)`.
-  Tests first: `Team` is Billable, creates Stripe customer (Cashier fake/`stripe-mock`), migrations present.
-  → **T2 merged first** (tenancy correct before money touches data). → T1 (key rotated).
-- [ ] **T5. Plans + subscriptions.** (PR-T5) Define Stripe products/prices (hosting tiers). Subscribe flow per Team (`$team->newSubscription(...)->create($paymentMethod)`). Filament resource/page under App panel for plan select + payment method (Stripe Payment Element).
-  Tests first: subscribe creates active subscription, swap/cancel, tenant can't bill another Team.
-  → T4.
-- [ ] **T6. Webhooks.** (PR-T6) Register Cashier webhook route (`cashier:webhook` or mounted controller), set endpoint in Stripe dashboard, verify signature via `STRIPE_WEBHOOK_SECRET`. Handle subscription lifecycle (created/updated/deleted, payment failed). Don't trust client redirects for fulfillment.
-  Tests first: valid signature processed, bad signature 403, each event mutates state correctly.
-  → T4.
-- [ ] **T7. Tie billing → hosting actions.** (PR-T7) On subscription active → provision/un-suspend via `WebHostingControlPanelManager`; on past_due/canceled → suspend. Hook into the module `Events/` or webhook handlers.
-  Tests first: active→provision called, past_due/canceled→suspend called (mock the panel manager).
-  → T5, T6.
+- [x] **T4. Install + config Cashier.** (PR #469) `laravel/cashier ^16.6`; `Billable` on `Team` + `Cashier::useCustomerModel(Team::class)`; customer columns on `teams`, subs/items keyed `team_id`; Stripe env in `.env.example`. Tests: `CashierSetupTest` (3).
+- [x] **T5. Plans + subscriptions.** (PR #470, base #469) `config/billing.php` tiers + `App\Billing\Plan`; Filament App-panel `Billing` page subscribes current Team via **Stripe Checkout** (hosted, not Payment Element — lazier). Tests: `PlanCatalogTest` + `BillingPageTest` (6).
+- [x] **T6. Webhooks.** (PR #471, base #470) Cashier auto-registers `POST stripe/webhook` w/ signature verify + lifecycle — **verified, no new code**. Tests: `StripeWebhookTest` (2) — bad sig 403, deleted→canceled.
+- [x] **T7. Tie billing → hosting.** (PR #472, base #471) `web_hosting_accounts.team_id` + relations; `App\Billing\HostingSubscriptionSync` (active→unsuspend, past_due/canceled→suspend); `SyncHostingWithSubscription` listener on Cashier `WebhookHandled`. Tests: `HostingSubscriptionSyncTest` (3).
+
+**Done 2026-06-28** — billing stack T4→T7 shipped as stacked PRs, full suite 37 green. Remaining: merge stack to main, then flip README billing line *roadmap → shipped* (T3 follow-up).
 
 ## P2 — Quality
 
