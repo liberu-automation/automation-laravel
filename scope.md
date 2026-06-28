@@ -65,6 +65,13 @@ Largest gap — claimed, entirely absent.
 
 - [ ] **T11. `docker-compose.dev.yml` is empty (2 bytes)** in the umbrella dir — fill with
   a real dev override or delete. → none.
+- [ ] **T12. Enable passkeys properly.** The repo half-shipped passkeys (migration +
+  `config/fortify.php` settings + a `passkeys` rate limiter) but the enabling deps are
+  absent, which broke boot/CI until disabled. To turn it on: upgrade `laravel/fortify`
+  to `^2` (adds `Features::passkeys()`), install the `laravel/passkeys` package, then
+  un-comment the two `ponytail:` sites — `config/fortify.php` (passkeys feature block)
+  and `database/migrations/2024_01_01_000000_create_passkeys_table.php` (restore
+  `Passkeys::userModel()`). Verify Jetstream/Fortify v2 compatibility first. → none.
 
 ## Critical path
 
