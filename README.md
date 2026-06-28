@@ -29,7 +29,7 @@
 
 ## About Liberu Automation
 
-Liberu Automation is an open-source Laravel 13 application that gives teams a powerful, extensible platform for automating hosting, billing and operational workflows. Built on PHP 8.5, Filament 5 and Livewire 4, it delivers a rich admin interface out of the box — no paid plugins, no lock-in. Whether you are managing a single server or orchestrating a multi-tenant SaaS, Liberu Automation provides the foundation you need with the flexibility to adapt.
+Liberu Automation is an open-source Laravel 13 application that gives teams a powerful, extensible platform for automating hosting and operational workflows, with billing on the roadmap. Built on PHP 8.5, Filament 5 and Livewire 4, it delivers a rich admin interface out of the box — no paid plugins, no lock-in. Whether you are managing a single server or orchestrating a multi-tenant SaaS, Liberu Automation provides the foundation you need with the flexibility to adapt.
 
 ## Main Features
 
