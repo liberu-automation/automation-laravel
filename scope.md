@@ -26,74 +26,7 @@ Legend: ✅ confirmed · ⚠️ partial / overstated · ❌ not present
 
 README's "Billing automation" line should be removed or marked roadmap until billing code lands. Soften "Livewire 4 components" and "Comprehensive test suite" to match reality, or build them out.
 
----
-
-# Prioritized Backlog
-
-Derived from the gaps above. Priority = trust/risk first, then missing core feature,
-then quality. `→` marks a blocking dependency.
-
-## P0 — Truth & security (cheap, do first)
-
-- [ ] **T1. Rotate prod `APP_KEY`.** Leaked key sits in git history; anyone with repo
-  access can forge cookies/decrypt data. Ops task, no code.
-  → none. Blocks nothing, but until done all encryption guarantees are void.
-- [ ] **T2. Merge security PR #454** (tenant isolation, encrypted creds, headers/HTTPS).
-  → T1 should land in same deploy window (cast + key rotation together).
-- [ ] **T3. Fix README accuracy.** Remove "Billing automation" line (or mark *roadmap*);
-  soften "Livewire 4 components" and "Comprehensive test suite" to match reality.
-  → depends on T8 decision (build billing vs drop claim).
-
-## P1 — Missing core feature: Billing automation — **DEFERRED (roadmap)**
-
-Largest gap — claimed, entirely absent.
-
-- [x] **T8. GATE — decided 2026-06-28: roadmap-only.** No billing code built now. README
-  marks Billing as *roadmap* (handled in T3). T4–T7 deferred until a build is greenlit.
-- [ ] ~~T4–T7 (provider, models, webhooks, triggers)~~ — **deferred**, not in current scope.
-  If greenlit later: all → **T2 merged** first (tenancy correct before money touches data).
-
-## P2 — Quality
-
-- [ ] **T9. Expand test suite.** Delete `ExampleTest` stubs (Feature + Unit); add coverage
-  for hosting CRUD, tenant access gating, module system, auth. → T2 (assert the *fixed*
-  gating, not the bypass).
-- [ ] **T10. Livewire components** — either build the reactive UI the README implies, or
-  drop the plural claim (folded into T3). → none.
-
-## P3 — Housekeeping
-
-- [ ] **T11. `docker-compose.dev.yml` is empty (2 bytes)** in the umbrella dir — fill with
-  a real dev override or delete. → none.
-- [ ] **T12. Enable passkeys properly.** The repo half-shipped passkeys (migration +
-  `config/fortify.php` settings + a `passkeys` rate limiter) but the enabling deps are
-  absent, which broke boot/CI until disabled. To turn it on: upgrade `laravel/fortify`
-  to `^2` (adds `Features::passkeys()`), install the `laravel/passkeys` package, then
-  un-comment the two `ponytail:` sites — `config/fortify.php` (passkeys feature block)
-  and `database/migrations/2024_01_01_000000_create_passkeys_table.php` (restore
-  `Passkeys::userModel()`). Verify Jetstream/Fortify v2 compatibility first. → none.
-
-## Critical path
-
-`T1+T2` (deploy together) → unblocks `T9` (real tests) and all of `P1`.
-`T8` gate decides whether `P1` runs at all. `T3` is independent and cheap — ship now.
-
----
-
-# Out-of-Scope Boundaries
-
-This backlog does **not** cover, and these need separate scoping if wanted:
-
-- **History scrub** of the leaked `APP_KEY` (BFG/`git filter-repo`) — rotation (T1)
-  neutralizes the risk; rewriting shared history is a separate, disruptive op.
-- **New feature work beyond the 8 README claims** — anything not listed in Main Features.
-- **Filament panel UX/redesign** — resources exist and work; polish is not scoped here.
-- **Infra/deploy** (k8s manifests under `k8s/`, production hosting, secrets manager
-  rollout) — beyond app-code scope.
-- **Dependency major-version upgrades** — `composer audit` is clean; PR #455 only pins
-  constraints. No framework bumps planned here.
-- **Multi-provider billing / OAuth marketplace** — if T8 picks Stripe, other providers
-  are explicitly out until requested.
+Prioritized backlog, dependencies, and out-of-scope boundaries moved to `TASKS.md`.
 
 ---
 
@@ -101,4 +34,4 @@ This backlog does **not** cover, and these need separate scoping if wanted:
 
 Security audit applied separately (PR #454): tenant-isolation fix, encrypted hosting
 credentials, CORS/headers/HTTPS hardening, dead-code removal. Outstanding manual task:
-rotate prod `APP_KEY` (leaked in git history) — tracked as **T1** above.
+rotate prod `APP_KEY` (leaked in git history) — tracked as **T1** in `TASKS.md`.
