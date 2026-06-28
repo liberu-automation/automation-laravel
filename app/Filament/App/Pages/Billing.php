@@ -6,7 +6,9 @@ use App\Billing\Plan;
 use App\Models\Team;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
+use Illuminate\Http\RedirectResponse;
 use Laravel\Cashier\Checkout;
+use Laravel\Cashier\Invoice;
 
 class Billing extends Page
 {
@@ -47,5 +49,34 @@ class Billing extends Page
                 'success_url' => static::getUrl().'?checkout=success',
                 'cancel_url' => static::getUrl().'?checkout=cancelled',
             ]);
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->currentTeam()->subscribed('default');
+    }
+
+    /**
+     * Past invoices for the current Team. Empty until it has a Stripe customer.
+     *
+     * @return array<int, Invoice>
+     */
+    public function invoices(): array
+    {
+        $team = $this->currentTeam();
+
+        return $team->hasStripeId() ? $team->invoices()->all() : [];
+    }
+
+    /**
+     * Redirect to the Stripe-hosted billing portal (manage card, cancel, invoices).
+     */
+    public function manageBilling(): RedirectResponse
+    {
+        $team = $this->currentTeam();
+
+        abort_unless($team->hasStripeId(), 404);
+
+        return $team->redirectToBillingPortal(static::getUrl());
     }
 }

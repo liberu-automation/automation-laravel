@@ -1,14 +1,27 @@
 <x-filament-panels::page>
-    @php($subscribed = $this->currentTeam()->subscribed('default'))
-
-    @if ($subscribed)
+    @if ($this->hasActiveSubscription())
         <x-filament::section>
             <x-slot name="heading">Current subscription</x-slot>
             <p>Your team has an active subscription.</p>
-            <x-filament::button tag="a" :href="route('cashier.billing-portal') ?? '#'" color="gray">
+            <x-filament::button wire:click="manageBilling" color="gray">
                 Manage billing
             </x-filament::button>
         </x-filament::section>
+
+        @php($invoices = $this->invoices())
+        @if (count($invoices))
+            <x-filament::section>
+                <x-slot name="heading">Invoices</x-slot>
+                <ul class="divide-y">
+                    @foreach ($invoices as $invoice)
+                        <li class="flex items-center justify-between py-2">
+                            <span>{{ $invoice->date()->toFormattedDateString() }} — {{ $invoice->total() }}</span>
+                            <x-filament::link :href="$invoice->hostedInvoiceUrl()" target="_blank">View</x-filament::link>
+                        </li>
+                    @endforeach
+                </ul>
+            </x-filament::section>
+        @endif
     @endif
 
     <div class="grid gap-6 md:grid-cols-2">
