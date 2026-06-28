@@ -107,19 +107,17 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
 
     public function canAccessTenant(Model $tenant): bool
     {
-        return true; //$this->ownedTeams->contains($tenant);
+        return $this->allTeams()->contains($tenant);
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        //        return $this->hasVerifiedEmail();
-        return true;
+        return $this->hasVerifiedEmail();
     }
 
     public function canAccessFilament(): bool
     {
-        //        return $this->hasVerifiedEmail();
-        return true;
+        return $this->hasVerifiedEmail();
     }
 
     public function getDefaultTenant(Panel $panel): ?Model
