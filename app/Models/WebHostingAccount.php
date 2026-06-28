@@ -20,4 +20,8 @@ class WebHostingAccount extends Model
     protected $hidden = [
         'password',
     ];
+
+    protected $casts = [
+        'password' => 'encrypted',
+    ];
 }
