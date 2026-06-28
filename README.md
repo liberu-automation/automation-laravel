@@ -34,13 +34,13 @@ Liberu Automation is an open-source Laravel 13 application that gives teams a po
 ## Main Features
 
 - **Hosting control panel** — ready-to-use primitives for managing users, teams, accounts and site settings across environments.
-- **Billing automation** — pre-built hooks, seeders and workflow triggers that slot into your existing payment and invoicing pipelines.
+- **Billing automation** _(roadmap)_ — planned hooks and workflow triggers to slot into payment/invoicing pipelines. Not yet implemented.
 - **Filament 5 admin resources** — polished, responsive admin panels generated from your Eloquent models with minimal boilerplate.
-- **Livewire 4 components** — reactive, real-time UI components that keep your UX snappy without writing custom JavaScript.
+- **Livewire 4 + Filament UI** — reactive admin interfaces powered by Livewire under Filament, plus room for custom components.
 - **Pluggable modules architecture** — add or remove feature modules without touching core logic; extend via service providers and events.
 - **Docker & Sail ready** — containerised from day one; spin up a full environment with a single command.
 - **CI/CD workflows** — bundled GitHub Actions for install, test and Docker image builds so your pipelines are ready immediately.
-- **Comprehensive test suite** — PHPUnit tests covering core workflows with Codecov integration for continuous coverage tracking.
+- **Test suite & CI** — PHPUnit tests for core workflows with Codecov coverage tracking.
 
 ## Installation
 
