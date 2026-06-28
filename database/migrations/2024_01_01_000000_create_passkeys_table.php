@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use App\Models\User;
 use Illuminate\Support\Facades\Schema;
-use Laravel\Passkeys\Passkeys;
 
 return new class extends Migration
 {
@@ -14,7 +14,10 @@ return new class extends Migration
     {
         Schema::create('passkeys', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Passkeys::userModel(), 'user_id')->constrained()->cascadeOnDelete();
+            // ponytail: was Passkeys::userModel() from laravel/passkeys (not installed,
+            // fataled every migration). Point at the app User model directly until the
+            // passkeys package + Fortify v2 land.
+            $table->foreignIdFor(User::class, 'user_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('credential_id')->unique();
             $table->json('credential');
