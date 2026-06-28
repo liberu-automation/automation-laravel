@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Listeners\SyncHostingWithSubscription;
 use App\Models\Team;
 use App\Modules\ModuleManager;
 use App\Modules\ModuleServiceProvider;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
+use Laravel\Cashier\Events\WebhookHandled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Billing entity is the Team (Filament panels are Team-tenant scoped), not the User.
         Cashier::useCustomerModel(Team::class);
+
+        // Provision/suspend a Team's hosting when its subscription state changes.
+        Event::listen(WebhookHandled::class, SyncHostingWithSubscription::class);
 
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
