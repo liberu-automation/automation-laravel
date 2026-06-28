@@ -172,9 +172,12 @@ return [
             'confirmPassword' => true,
             // 'window' => 0,
         ]),
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
+        // ponytail: Features::passkeys() requires Fortify v2; locked at v1.36.2,
+        // so calling it fatals package:discover and the app won't boot. Re-enable
+        // when upgrading laravel/fortify to ^2 (passkeys table migration already exists).
+        // Features::passkeys([
+        //     'confirmPassword' => true,
+        // ]),
     ],
 
 ];
