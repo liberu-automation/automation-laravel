@@ -53,10 +53,9 @@ Billing entity = **Team** (panels are Team-tenant scoped). Make `Team` billable,
 
 ## Status (2026-06-28)
 
-- **Done:** T3 (#468), T4 (#469), T9, T10, T11.
-- **Open PRs (stacked, merge in order):** T5 (#470) → T6 (#471) → T7 (#472). After they land in main, flip the README billing line *roadmap → shipped*.
+- **Done:** T3 (#468), T4 (#469), T9, T10, T11. Billing T5–T7 + README *roadmap→shipped* landed via **#474** (re-landed on main after #470–#472 merged into their feat bases, not main). Main green, 37 tests.
 - **Blocked:** T12 (Fortify v2 unreleased + Jetstream pin).
-- **Not mine (ops/security):** T1 (rotate `APP_KEY`), T2 (security PR #454).
+- **Not mine (ops/security):** T1 (rotate `APP_KEY`), T2 (security PR #454, merged #466).
 
 ## Out of scope
 
