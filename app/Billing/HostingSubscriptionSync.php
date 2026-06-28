@@ -33,7 +33,20 @@ class HostingSubscriptionSync
             return;
         }
 
-        $this->manager($account->control_panel)->unsuspendAccount($account->username);
+        $manager = $this->manager($account->control_panel);
+
+        // First-time provisioning vs re-enabling a previously suspended account.
+        if ($account->status === 'pending') {
+            $manager->createAccount([
+                'domain' => $account->domain,
+                'username' => $account->username,
+                'password' => $account->password,
+                'control_panel' => $account->control_panel,
+            ]);
+        } else {
+            $manager->unsuspendAccount($account->username);
+        }
+
         $account->update(['status' => 'active']);
     }
 
